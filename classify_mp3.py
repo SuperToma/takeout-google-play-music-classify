@@ -56,36 +56,52 @@ for mp3_path in glob.glob(FILES_DIR + "/*.mp3"):
     if artist is None:
         artist = filename_infos.get("artist")
 
+    # For compilation albums
+    if id3.album_artist == "Various Artists":
+        artist = "Various Artists"
+
     # format name only if only standard chars (don't want to rename V▲LH▲LL)
     if re.match(r'^[ a-zA-Z0-9_-]+$', artist):
         artist = artist.title()
-
-    album = id3.album
-    if album is None:
+    
+    if id3.album is not None:
+        album = re.sub("[<>:\"/\|?*]", "_", id3.album)
+    else:
         album = filename_infos.get("album")
 
     year = str(id3.getBestDate())
 
-    title = id3.title
-    if title is None:
+    if id3.title is not None:
+        title = re.sub("[<>:\"/\|?*]", "_", id3.title)
+    else:
         title = filename_infos.get("title")
 
     track_num = id3.track_num
 
-    album = (f"({year}) " if year is not None else "") + album
+    if album is None or album == "":
+        album = (f"({year})" if year is not None else "")
+    else:
+        album = (f"({year}) " if year is not None else "") + re.sub("[<>:\"/\|?*]", "_", album)
 
     filename = f"{track_num[0]:02} - " if track_num is not None else ""
     filename = f"{filename}{title}.mp3".replace(os.path.sep, "-")
+
+    # try to handle long names
+    if len(filename) > 64:
+        filename = filename[0:60] + '.mp3'
 
     # Create directories & file
     dir_path = os.path.join(FILES_DIR, artist, album)
     file_path = os.path.join(dir_path, filename)
 
     pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
-    os.rename(mp3_path, file_path)
-
-    print(f"{mp3_path} moved to {file_path}")
-
+    try:
+        os.rename(mp3_path, file_path)
+    except FileNotFoundError: 
+        print(f"couldn't move {mp3_path.encode('cp1252', errors='ignore')}, maybe the resulting filename will be too long for Windows'")
+    
+    print(f"{mp3_path.encode('cp1252', errors='ignore')} moved to {file_path.encode('cp1252', errors='ignore')}")
+    
 print("Sorting MP3 files done.")
 
 print("Removing .csv file.")
