@@ -12,25 +12,19 @@ logging.getLogger("eyed3").setLevel(logging.CRITICAL)
 def get_data_from_filename(file_path):
     file_name = file_path.split("/")[-1].replace(".mp3", "")
     data = {
-        "artist": "000 - orphan albums"
+        "artist": "000 - unknown artist",
+        "album": "000 - unknown album",
+        "song": None,
+        "track_number": 0,
+        "year": "0000"
     }
-
-    if " - " not in file_name:
-        return data
-
-    if file_name.startswith(" - "):
-        file_name = file_name.replace(" - ", "", 1)
-    else:
-        data.update({"artist": file_name.split(" - ")[0]})
 
     patterns = (
         # Brandy Kills - The Blackest Black - Summertime.mp3
         # Covenant - Synergy - Live In Europe - Babel.mp3
-        re.compile("(?!^ - $) - (?P<album>.*) - (?P<song>.*)"),
+        re.compile("^(?P<artist>.*) - (?P<album>.*) - (?P<song>.*)\.mp3"),
         # Glass Apple Bonzai - In the Dark(001)Light in t.mp3
-        re.compile(
-            "(?!^ - $) - (?P<album>.*)\((?P<position>\d\d\d)\)(?P<song>.*)"
-        ),
+        re.compile("^(?P<artist>.*) - (?P<album>.*)\((?P<position>\d\d\d)\)(?P<song>.*).mp3"),
     )
 
     for pattern in patterns:
@@ -74,25 +68,15 @@ def rename_and_move_file(out_dir, mp3_path):
 
     filename_infos = get_data_from_filename(mp3_path)
 
-    artist = id3.artist
-    if artist is None:
-        artist = filename_infos.get("artist")
-
+    artist = id3.artist or filename_infos.get("artist")
     # format name only if only standard chars (don't want to rename V▲LH▲LL)
     if re.match(r'^[ a-zA-Z0-9_-]+$', artist):
         artist = artist.title()
 
-    album = id3.album
-    if album is None:
-        album = filename_infos.get("album")
-
-    year = str(id3.getBestDate())
-
-    title = id3.title
-    if title is None:
-        title = filename_infos.get("title")
-
-    track_num = id3.track_num
+    album = id3.album or filename_infos.get("album")
+    year = id3.getBestDate() or filename_infos.get("year")
+    title = id3.title or filename_infos.get("title")
+    track_num = id3.track_num or filename_infos.get("track_number")
 
     album = (f"({year}) " if year is not None else "") + album
 
