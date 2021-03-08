@@ -112,6 +112,37 @@ Then run the script
 python classify_mp3.py
 ```
 
+Options:
+```
+python classify_mp3.py --help
+usage: classify_mp3.py [-h] [-a] [-A] [-b] [-B] [-c] [-C] [-d] [-t] [-T] [-v] [-y] [-Y] [input_dir] [output_dir]
+
+Classify a Google Takeout collection of Google Music MP3 files, moving them to a directory tree in the output directory as '.../artist/(year) album/track -
+filename.mp3'.
+
+positional arguments:
+  input_dir             input directory containing files to classify, default is ../Takeout/Google Play Music/Tracks
+  output_dir            output directory, default is input directory
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -a, --artist          include the artist name as a layer in the directory tree
+  -A, --no-artist       do not include the artist name as a layer in the directory tree
+  -b, --album           include the album name as a layer in the directory tree
+  -B, --no-album        do not include the album name as a layer in the directory tree
+  -c, --remove-csvs     remove CSV files from the input directory
+  -C, --no-remove-csvs  do not remove CSV files from the input directory
+  -d, --dry-run         do not actually change files
+  -t, --track-number    include the track number in the filename
+  -T, --no-track-number
+                        do not include the track number in the filename
+  -v, --version         show program's version number and exit
+  -y, --year            include the year in the album directory name
+  -Y, --no-year         do not include the year in the album directory name
+
+Defaults: -a -b -T -Y
+```
+
 ## Others:
 * Don't hesitate to fix/improve/fork
 * Only tested on MacOS but seems working on Linux/Windows

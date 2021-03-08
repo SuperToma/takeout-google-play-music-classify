@@ -75,10 +75,10 @@ def init_argparse():
         action="version", version = f"{parser.prog} version 1.0.0")
     parser.add_argument("-y", "--year",
         action="store_true", dest="year", default=False,
-        help="include the year as a layer in the directory tree")
+        help="include the year in the album directory name")
     parser.add_argument("-Y", "--no-year",
         action="store_false", dest="year",
-        help="do not include the year as a layer in the directory tree")
+        help="do not include the year in the album directory name")
     parser.add_argument("input_dir", nargs="?",
         default="../Takeout/Google Play Music/Tracks",
         help="input directory containing files to classify, default is %(default)s")
