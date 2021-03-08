@@ -30,7 +30,7 @@ def get_data_from_filename(file_path):
     )
 
     for pattern in patterns:
-        result = pattern.search(file_name)
+        result = pattern.search(filename)
         if result is not None:
             data.update({
                 "album": result.group("album") if "album" in pattern.groupindex else None,
@@ -56,6 +56,12 @@ def init_argparse():
     parser.add_argument("-B", "--no-album",
         action="store_false", dest="album",
         help="do not include the album name as a layer in the directory tree")
+    parser.add_argument("-c", "--remove-csvs",
+        action="store_true", dest="remove_csvs", default=True,
+        help="remove CSV files from the input directory")
+    parser.add_argument("-C", "--no-remove-csvs",
+        action="store_false", dest="remove_csvs",
+        help="do not remove CSV files from the input directory")
     parser.add_argument("-d", "--dry-run",
         action="store_true", default=False,
         help="do not actually change files")
@@ -91,7 +97,8 @@ def main():
             add_album=args.album, add_year=args.year, add_track=args.track_number)
     print("Sorting MP3 files done.")
 
-    remove_csv_files(args.input_dir, dry_run=args.dry_run)
+    if args.remove_csvs:
+        remove_csv_files(args.input_dir, dry_run=args.dry_run)
     print("Script finished.")
 
 def rename_and_move_file(out_dir, mp3_path, dry_run=False, add_artist=True, add_album=True, add_year=False, add_track=False):
