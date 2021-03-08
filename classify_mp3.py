@@ -5,7 +5,7 @@ import os
 import pathlib
 import re
 
-FILES_DIR = "../Takeout/Google Play Musique/Titres"
+FILES_DIR = "../Takeout/Google Play Music/Tracks"
 
 logging.getLogger("eyed3").setLevel(logging.CRITICAL)
 
