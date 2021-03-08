@@ -1,11 +1,10 @@
+import argparse
 import eyed3
 import glob
 import logging
 import os
 import pathlib
 import re
-
-FILES_DIR = "../Takeout/Google Play Music/Tracks"
 
 logging.getLogger("eyed3").setLevel(logging.CRITICAL)
 
@@ -46,15 +45,31 @@ def get_data_from_filename(file_path):
 
     return data
 
+def init_argparse():
+    parser = argparse.ArgumentParser(description="Classify a Google Takeout collection of Google Music MP3 files, moving them to a directory tree in the output directory as '.../artist/year/album/track - filename.mp3'.")
+    parser.add_argument("-v", "--version",
+        action="version", version = f"{parser.prog} version 1.0.0")
+    parser.add_argument("input_dir", nargs="?",
+        default="../Takeout/Google Play Music/Tracks",
+        help="input directory containing files to classify, default is %(default)s")
+    parser.add_argument("output_dir", nargs="?",
+        help="output directory, default is input directory")
+    return parser
+
 def main():
-    for mp3_path in glob.glob(FILES_DIR + "/*.mp3"):
-        rename_and_move_file(mp3_path)
+    parser = init_argparse()
+    args = parser.parse_args()
+    if args.output_dir is None:
+        args.output_dir = args.input_dir
+
+    for mp3_path in glob.glob(args.input_dir + "/*.mp3"):
+        rename_and_move_file(args.output_dir, mp3_path)
     print("Sorting MP3 files done.")
 
-    remove_csv_files(FILES_DIR)
+    remove_csv_files(args.input_dir)
     print("Script finished.")
 
-def rename_and_move_file(mp3_path):
+def rename_and_move_file(out_dir, mp3_path):
     id3 = eyed3.load(mp3_path).tag
 
     filename_infos = get_data_from_filename(mp3_path)
@@ -85,7 +100,7 @@ def rename_and_move_file(mp3_path):
     filename = f"{filename}{title}.mp3".replace(os.path.sep, "-")
 
     # Create directories & file
-    dir_path = os.path.join(FILES_DIR, artist, album)
+    dir_path = os.path.join(out_dir, artist, album)
     file_path = os.path.join(dir_path, filename)
 
     pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
@@ -93,10 +108,10 @@ def rename_and_move_file(mp3_path):
 
     print(f"{mp3_path} moved to {file_path}")
 
-def remove_csv_files(files_dir):
+def remove_csv_files(input_dir):
     print("Removing .csv files.")
 
-    for csv_path in glob.glob(files_dir + "/*.csv"):
+    for csv_path in glob.glob(input_dir + "/*.csv"):
         print(f"Removing file {csv_path}")
         os.remove(csv_path)
 
