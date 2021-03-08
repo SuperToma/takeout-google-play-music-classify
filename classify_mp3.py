@@ -42,12 +42,37 @@ def get_data_from_filename(file_path):
     return data
 
 def init_argparse():
-    parser = argparse.ArgumentParser(description="Classify a Google Takeout collection of Google Music MP3 files, moving them to a directory tree in the output directory as '.../artist/(year) album/track - filename.mp3'.")
+    parser = argparse.ArgumentParser(description="Classify a Google Takeout collection of Google Music MP3 files, moving them to a directory tree in the output directory as '.../artist/(year) album/track - filename.mp3'.",
+        epilog="Defaults: -a -b -T -Y")
+    parser.add_argument("-a", "--artist",
+        action="store_true", dest="artist", default=True,
+        help="include the artist name as a layer in the directory tree")
+    parser.add_argument("-A", "--no-artist",
+        action="store_false", dest="artist",
+        help="do not include the artist name as a layer in the directory tree")
+    parser.add_argument("-b", "--album",
+        action="store_true", dest="album", default=True,
+        help="include the album name as a layer in the directory tree")
+    parser.add_argument("-B", "--no-album",
+        action="store_false", dest="album",
+        help="do not include the album name as a layer in the directory tree")
     parser.add_argument("-d", "--dry-run",
         action="store_true", default=False,
         help="do not actually change files")
+    parser.add_argument("-t", "--track-number",
+        action="store_true", dest="track_number", default=False,
+        help="include the track number in the filename")
+    parser.add_argument("-T", "--no-track-number",
+        action="store_false", dest="track_number",
+        help="do not include the track number in the filename")
     parser.add_argument("-v", "--version",
         action="version", version = f"{parser.prog} version 1.0.0")
+    parser.add_argument("-y", "--year",
+        action="store_true", dest="year", default=False,
+        help="include the year as a layer in the directory tree")
+    parser.add_argument("-Y", "--no-year",
+        action="store_false", dest="year",
+        help="do not include the year as a layer in the directory tree")
     parser.add_argument("input_dir", nargs="?",
         default="../Takeout/Google Play Music/Tracks",
         help="input directory containing files to classify, default is %(default)s")
@@ -62,13 +87,14 @@ def main():
         args.output_dir = args.input_dir
 
     for mp3_path in glob.glob(os.path.join(args.input_dir, "*.mp3")):
-        rename_and_move_file(args.output_dir, mp3_path, dry_run=args.dry_run)
+        rename_and_move_file(args.output_dir, mp3_path, dry_run=args.dry_run, add_artist=args.artist,
+            add_album=args.album, add_year=args.year, add_track=args.track_number)
     print("Sorting MP3 files done.")
 
     remove_csv_files(args.input_dir, dry_run=args.dry_run)
     print("Script finished.")
 
-def rename_and_move_file(out_dir, mp3_path, dry_run=False):
+def rename_and_move_file(out_dir, mp3_path, dry_run=False, add_artist=True, add_album=True, add_year=False, add_track=False):
     id3 = eyed3.load(mp3_path).tag
     filename_infos = get_data_from_filename(mp3_path)
 
@@ -82,10 +108,19 @@ def rename_and_move_file(out_dir, mp3_path, dry_run=False):
     title = id3.title or filename_infos.get("title")
     track_num = id3.track_num or filename_infos.get("track_number")
 
-    album = (f"({year}) " if year is not None else "") + album
+    file_path = out_dir
+    if add_artist:
+        file_path = os.path.join(file_path, remove_invalid_chars(artist))
+    if add_year:
+        album = f"({year}) " + album
+    if add_album:
+        file_path = os.path.join(file_path, remove_invalid_chars(album))
 
-    filename = (f"{track_num[0]:02} - " if track_num is not None else "") + title
-    file_path = os.path.join(out_dir, remove_invalid_chars(artist), remove_invalid_chars(album), remove_invalid_chars(filename) + ".mp3")
+    filename = title
+    if add_track and track_num is not None:
+        filename = f"{track_num[0]:02} - " + filename
+    filename = remove_invalid_chars(filename) + ".mp3"
+    file_path = os.path.join(file_path, filename)
 
     # Create directories & move file
     print(f"Moving {mp3_path} to {file_path}")
