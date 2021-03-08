@@ -41,6 +41,9 @@ def get_data_from_filename(file_path):
 
 def init_argparse():
     parser = argparse.ArgumentParser(description="Classify a Google Takeout collection of Google Music MP3 files, moving them to a directory tree in the output directory as '.../artist/year/album/track - filename.mp3'.")
+    parser.add_argument("-d", "--dry-run",
+        action="store_true", default=False,
+        help="do not actually change files")
     parser.add_argument("-v", "--version",
         action="version", version = f"{parser.prog} version 1.0.0")
     parser.add_argument("input_dir", nargs="?",
@@ -57,13 +60,13 @@ def main():
         args.output_dir = args.input_dir
 
     for mp3_path in glob.glob(args.input_dir + "/*.mp3"):
-        rename_and_move_file(args.output_dir, mp3_path)
+        rename_and_move_file(args.output_dir, mp3_path, dry_run=args.dry_run)
     print("Sorting MP3 files done.")
 
-    remove_csv_files(args.input_dir)
+    remove_csv_files(args.input_dir, dry_run=args.dry_run)
     print("Script finished.")
 
-def rename_and_move_file(out_dir, mp3_path):
+def rename_and_move_file(out_dir, mp3_path, dry_run=False):
     id3 = eyed3.load(mp3_path).tag
 
     filename_infos = get_data_from_filename(mp3_path)
@@ -87,17 +90,18 @@ def rename_and_move_file(out_dir, mp3_path):
     dir_path = os.path.join(out_dir, artist, album)
     file_path = os.path.join(dir_path, filename)
 
-    pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
-    os.rename(mp3_path, file_path)
+    print(f"Moving {mp3_path} to {file_path}")
+    if not dry_run:
+        pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
+        os.rename(mp3_path, file_path)
 
-    print(f"{mp3_path} moved to {file_path}")
-
-def remove_csv_files(input_dir):
+def remove_csv_files(input_dir, dry_run=False):
     print("Removing .csv files.")
 
     for csv_path in glob.glob(input_dir + "/*.csv"):
         print(f"Removing file {csv_path}")
-        os.remove(csv_path)
+        if not dry_run:
+            os.remove(csv_path)
 
 if __name__ == "__main__":
     main()
