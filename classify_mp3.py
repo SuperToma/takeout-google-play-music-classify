@@ -92,7 +92,7 @@ def main():
     if args.output_dir is None:
         args.output_dir = args.input_dir
 
-    for mp3_path in glob.glob(os.path.join(args.input_dir, "*.mp3")):
+    for mp3_path in glob.iglob(os.path.join(args.input_dir, "*.mp3")):
         rename_and_move_file(args.output_dir, mp3_path, dry_run=args.dry_run, add_artist=args.artist,
             add_album=args.album, add_year=args.year, add_track=args.track_number)
     print("Sorting MP3 files done.")
@@ -146,7 +146,7 @@ def rename_and_move_file(out_dir, mp3_path, dry_run=False, add_artist=True, add_
 def remove_csv_files(input_dir, dry_run=False):
     print("Removing .csv files.")
 
-    for csv_path in glob.glob(os.path.join(input_dir, "*.csv")):
+    for csv_path in glob.iglob(os.path.join(input_dir, "*.csv")):
         print(f"Removing file {csv_path}")
         if not dry_run:
             os.remove(csv_path)
