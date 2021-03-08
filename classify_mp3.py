@@ -4,6 +4,7 @@ import glob
 import logging
 import os
 import pathlib
+import platform
 import re
 import sys
 
@@ -83,17 +84,14 @@ def rename_and_move_file(out_dir, mp3_path, dry_run=False):
 
     album = (f"({year}) " if year is not None else "") + album
 
-    filename = f"{track_num[0]:02} - " if track_num is not None else ""
-    filename = f"{filename}{title}.mp3".replace(os.path.sep, "-")
+    filename = (f"{track_num[0]:02} - " if track_num is not None else "") + title
+    file_path = os.path.join(out_dir, remove_invalid_chars(artist), remove_invalid_chars(album), remove_invalid_chars(filename) + ".mp3")
 
-    # Create directories & file
-    dir_path = os.path.join(out_dir, artist, album)
-    file_path = os.path.join(dir_path, filename)
-
+    # Create directories & move file
     print(f"Moving {mp3_path} to {file_path}")
     if not dry_run:
         try:
-            pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
+            pathlib.Path(os.path.dirname(file_path)).mkdir(parents=True, exist_ok=True)
         except OSError as e:
             print(f"Error {e.errno} creating {os.path.dirname(file_path)}: {e.strerror}", file=sys.stderr)
             return
@@ -110,6 +108,12 @@ def remove_csv_files(input_dir, dry_run=False):
         print(f"Removing file {csv_path}")
         if not dry_run:
             os.remove(csv_path)
+
+def remove_invalid_chars(str):
+    invalid_chars = "/"
+    if platform.system() == "Windows":
+        invalid_chars = invalid_chars + ":\"\\?*"
+    return re.sub("[" + invalid_chars +"]", "-", str.rstrip())
 
 if __name__ == "__main__":
     main()
