@@ -10,7 +10,7 @@ logging.getLogger("eyed3").setLevel(logging.CRITICAL)
 
 
 def get_data_from_filename(file_path):
-    file_name = file_path.split("/")[-1].replace(".mp3", "")
+    filename = os.path.basename(file_path)
     data = {
         "artist": "000 - unknown artist",
         "album": "000 - unknown album",
@@ -40,7 +40,7 @@ def get_data_from_filename(file_path):
     return data
 
 def init_argparse():
-    parser = argparse.ArgumentParser(description="Classify a Google Takeout collection of Google Music MP3 files, moving them to a directory tree in the output directory as '.../artist/year/album/track - filename.mp3'.")
+    parser = argparse.ArgumentParser(description="Classify a Google Takeout collection of Google Music MP3 files, moving them to a directory tree in the output directory as '.../artist/(year) album/track - filename.mp3'.")
     parser.add_argument("-d", "--dry-run",
         action="store_true", default=False,
         help="do not actually change files")
@@ -59,7 +59,7 @@ def main():
     if args.output_dir is None:
         args.output_dir = args.input_dir
 
-    for mp3_path in glob.glob(args.input_dir + "/*.mp3"):
+    for mp3_path in glob.glob(os.path.join(args.input_dir, "*.mp3")):
         rename_and_move_file(args.output_dir, mp3_path, dry_run=args.dry_run)
     print("Sorting MP3 files done.")
 
@@ -68,7 +68,6 @@ def main():
 
 def rename_and_move_file(out_dir, mp3_path, dry_run=False):
     id3 = eyed3.load(mp3_path).tag
-
     filename_infos = get_data_from_filename(mp3_path)
 
     artist = id3.artist or filename_infos.get("artist")
@@ -98,7 +97,7 @@ def rename_and_move_file(out_dir, mp3_path, dry_run=False):
 def remove_csv_files(input_dir, dry_run=False):
     print("Removing .csv files.")
 
-    for csv_path in glob.glob(input_dir + "/*.csv"):
+    for csv_path in glob.glob(os.path.join(input_dir, "*.csv")):
         print(f"Removing file {csv_path}")
         if not dry_run:
             os.remove(csv_path)
