@@ -46,8 +46,15 @@ def get_data_from_filename(file_path):
 
     return data
 
+def main():
+    for mp3_path in glob.glob(FILES_DIR + "/*.mp3"):
+        rename_and_move_file(mp3_path)
+    print("Sorting MP3 files done.")
 
-for mp3_path in glob.glob(FILES_DIR + "/*.mp3"):
+    remove_csv_files(FILES_DIR)
+    print("Script finished.")
+
+def rename_and_move_file(mp3_path):
     id3 = eyed3.load(mp3_path).tag
 
     filename_infos = get_data_from_filename(mp3_path)
@@ -86,12 +93,12 @@ for mp3_path in glob.glob(FILES_DIR + "/*.mp3"):
 
     print(f"{mp3_path} moved to {file_path}")
 
-print("Sorting MP3 files done.")
+def remove_csv_files(files_dir):
+    print("Removing .csv files.")
 
-print("Removing .csv file.")
+    for csv_path in glob.glob(files_dir + "/*.csv"):
+        print(f"Removing file {csv_path}")
+        os.remove(csv_path)
 
-for csv_path in glob.glob(FILES_DIR + "/*.csv"):
-    print(f"Removing file {csv_path}")
-    os.remove(csv_path)
-
-print("Script finishes")
+if __name__ == "__main__":
+    main()
