@@ -5,6 +5,7 @@ import logging
 import os
 import pathlib
 import re
+import sys
 
 logging.getLogger("eyed3").setLevel(logging.CRITICAL)
 
@@ -91,8 +92,16 @@ def rename_and_move_file(out_dir, mp3_path, dry_run=False):
 
     print(f"Moving {mp3_path} to {file_path}")
     if not dry_run:
-        pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
-        os.rename(mp3_path, file_path)
+        try:
+            pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            print(f"Error {e.errno} creating {os.path.dirname(file_path)}: {e.strerror}", file=sys.stderr)
+            return
+        try:
+            os.rename(mp3_path, file_path)
+        except OSError as e:
+            print(f"Error {e.errno} moving {mp3_path} to {file_path}: {e.strerror}", file=sys.stderr)
+            return
 
 def remove_csv_files(input_dir, dry_run=False):
     print("Removing .csv files.")
